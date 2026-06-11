@@ -1,0 +1,136 @@
+!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ 
+<!-- ===== 설정: 목표 날짜와 제목 (URL 쿼리로도 덮어쓰기 가능) ===== -->
+<!-- 예) https://yourname.github.io/dday/?date=2026-09-01&title=프로젝트%20마감 -->
+ 
+<title>D-Day</title>
+ 
+<!-- 카톡 미리보기 카드용 OG 태그 (정적이라 첫 스크랩 시점 값으로 고정됨에 유의) -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="D-Day 카운터" />
+<meta property="og:description" content="링크를 눌러 남은 날짜를 확인하세요" />
+<meta name="theme-color" content="#0b0d12" />
+ 
+<style>
+  :root {
+    --bg: #0b0d12;
+    --card: #14171f;
+    --line: #232838;
+    --text: #e8eaf0;
+    --muted: #8a90a3;
+    --accent: #6ea8fe;
+    --accent-soft: rgba(110,168,254,.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Pretendard", "Noto Sans KR", sans-serif;
+    background: radial-gradient(120% 120% at 50% 0%, #161a24 0%, var(--bg) 60%);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 40px 32px 32px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .label {
+    font-size: 14px;
+    letter-spacing: .08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 28px;
+    word-break: keep-all;
+  }
+  .dday {
+    display: inline-block;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -.02em;
+    padding: 8px 20px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .dday.zero { color: #ffd166; background: rgba(255,209,102,.12); }
+  .dday.past { color: #ff8585; background: rgba(255,133,133,.12); }
+  .target {
+    margin-top: 24px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    opacity: .7;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="label">D-DAY</div>
+    <div class="title" id="title">목표일</div>
+    <div class="dday" id="dday">D-?</div>
+    <div class="target" id="target"></div>
+    <div class="sub" id="sub"></div>
+  </div>
+ 
+<script>
+  // ===== 여기만 바꾸면 됩니다 =====
+  const DEFAULT_DATE  = "2027-05-15"; // 목표 날짜 (YYYY-MM-DD, KST 자정 기준)
+  const DEFAULT_TITLE = "배씨 겨론식 ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ";
+  // ================================
+ 
+  const params = new URLSearchParams(location.search);
+  const dateStr = params.get("date")  || DEFAULT_DATE;
+  const title   = params.get("title") || DEFAULT_TITLE;
+ 
+  // KST(+09:00) 자정 기준으로 고정해 시차 오차 제거
+  const target = new Date(dateStr + "T00:00:00+09:00");
+ 
+  function render() {
+    const now = new Date();
+    // 오늘 0시(KST) 기준으로 '날짜 차이'만 계산
+    const msPerDay = 86400000;
+    const diff = Math.ceil((target - now) / msPerDay);
+ 
+    const el = document.getElementById("dday");
+    el.classList.remove("zero", "past");
+ 
+    if (diff > 0)       el.textContent = "D-" + diff;
+    else if (diff === 0){ el.textContent = "D-DAY 🎉"; el.classList.add("zero"); }
+    else                { el.textContent = "D+" + (-diff); el.classList.add("past"); }
+ 
+    document.getElementById("title").textContent = title;
+    document.getElementById("target").textContent =
+      target.toLocaleDateString("ko-KR", { year:"numeric", month:"long", day:"numeric", weekday:"long" });
+    document.getElementById("sub").textContent =
+      "마지막 확인: " + now.toLocaleString("ko-KR");
+    document.title = (diff > 0 ? "D-"+diff : diff === 0 ? "D-DAY" : "D+"+(-diff)) + " · " + title;
+  }
+ 
+  render();
+  setInterval(render, 60 * 1000); // 1분마다 갱신
+</script>
+</body>
+</html>
